@@ -1,3 +1,5 @@
+from datetime import date
+from decimal import Decimal
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
@@ -41,3 +43,53 @@ class ObligacionOut(ObligacionBase):
 
 class MarcarPresentadaIn(BaseModel):
     periodo: str = Field(description='Periodo cumplido, formato "YYYY-MM" (mensual) o "YYYY" (anual)')
+
+
+class ParametrosFacturacionOut(BaseModel):
+    comision_docya_pct: Decimal
+    comision_mp_pct: Decimal
+    iva_pct: Decimal
+
+    class Config:
+        from_attributes = True
+
+
+class ParametrosFacturacionUpdate(BaseModel):
+    comision_docya_pct: Decimal = Field(ge=0, le=100)
+    comision_mp_pct: Decimal = Field(ge=0, le=100)
+    iva_pct: Decimal = Field(ge=0, le=100)
+
+
+class RegistroConsultaCreate(BaseModel):
+    fecha: date
+    medico: str = Field(min_length=1)
+    tipo: str = Field(min_length=1)
+    precio: Decimal = Field(ge=0)
+
+
+class RegistroConsultaOut(BaseModel):
+    id: int
+    fecha: date
+    medico: str
+    tipo: str
+    precio: Decimal
+    comision_docya_pct: Decimal
+    comision_mp_pct: Decimal
+    iva_pct: Decimal
+
+    class Config:
+        from_attributes = True
+
+
+class AjusteIvaOut(BaseModel):
+    periodo: str
+    otros_creditos: Decimal
+    notas: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AjusteIvaUpdate(BaseModel):
+    otros_creditos: Decimal = Field(ge=0)
+    notas: Optional[str] = None

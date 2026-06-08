@@ -59,4 +59,11 @@ usa el panel de administración).
 - `PUT    /contabilidad/obligaciones/{id}` — editar
 - `DELETE /contabilidad/obligaciones/{id}` — eliminar
 - `POST   /contabilidad/obligaciones/{id}/marcar-presentada` — marcar un período como cumplido (`{"periodo": "2026-06"}` o `{"periodo": "2026"}`)
+- `GET    /contabilidad/parametros-facturacion` — ver porcentajes de comisión DocYa, comisión MP e IVA
+- `PUT    /contabilidad/parametros-facturacion` — actualizar esos porcentajes (se aplican a las consultas nuevas)
+- `GET    /contabilidad/registros-consultas?desde=&hasta=` — listar consultas del libro (filtro opcional por fecha)
+- `POST   /contabilidad/registros-consultas` — registrar una consulta facturada
+- `DELETE /contabilidad/registros-consultas/{id}` — eliminar un registro
+- `GET    /contabilidad/ajustes-iva/{periodo}` — ver el ajuste manual de IVA crédito de un período (`YYYY-MM`)
+- `PUT    /contabilidad/ajustes-iva/{periodo}` — guardar ese ajuste (otros créditos / notas)
 - `GET    /health` — chequeo de salud

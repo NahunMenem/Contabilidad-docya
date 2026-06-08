@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import CORS_ORIGINS
-from .routers import obligaciones
+from .routers import libro_consultas, obligaciones
 
 app = FastAPI(title="DocYa Contabilidad API")
 
@@ -15,6 +15,7 @@ app.add_middleware(
 )
 
 app.include_router(obligaciones.router)
+app.include_router(libro_consultas.router)
 
 
 @app.get("/health")

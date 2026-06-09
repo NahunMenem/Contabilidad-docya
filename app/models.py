@@ -91,3 +91,59 @@ class AjusteIvaMensual(Base):
     otros_creditos = Column(Numeric(12, 2), nullable=False, default=0)
     notas = Column(Text, nullable=True)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class ComprobanteEmitido(Base):
+    __tablename__ = "comprobantes_emitidos"
+    __table_args__ = (
+        UniqueConstraint("tipo_comprobante", "punto_venta", "numero", name="uq_comprobante_emitido"),
+        {"schema": SCHEMA},
+    )
+
+    id = Column(Integer, primary_key=True)
+    fecha = Column(Date, nullable=False)
+    tipo_comprobante = Column(Text, nullable=False, default="Factura")
+    letra = Column(Text, nullable=False, default="B")
+    punto_venta = Column(Integer, nullable=False)
+    numero = Column(Integer, nullable=False)
+    receptor_nombre = Column(Text, nullable=False)
+    receptor_documento = Column(Text, nullable=True)
+    condicion_iva_receptor = Column(Text, nullable=True)
+    concepto = Column(Text, nullable=False)
+    importe_neto = Column(Numeric(12, 2), nullable=False)
+    iva_pct = Column(Numeric(6, 3), nullable=False, default=21)
+    iva_debito = Column(Numeric(12, 2), nullable=False)
+    importe_total = Column(Numeric(12, 2), nullable=False)
+    cae = Column(Text, nullable=True)
+    cae_vencimiento = Column(Date, nullable=True)
+    estado = Column(Text, nullable=False, default="emitido")
+    notas = Column(Text, nullable=True)
+    creado_por = Column(Text, nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class GastoCompra(Base):
+    __tablename__ = "gastos_compras"
+    __table_args__ = {"schema": SCHEMA}
+
+    id = Column(Integer, primary_key=True)
+    fecha = Column(Date, nullable=False)
+    proveedor_nombre = Column(Text, nullable=False)
+    proveedor_cuit = Column(Text, nullable=True)
+    tipo_comprobante = Column(Text, nullable=False, default="Factura")
+    letra = Column(Text, nullable=True)
+    punto_venta = Column(Integer, nullable=True)
+    numero = Column(Integer, nullable=True)
+    concepto = Column(Text, nullable=False)
+    categoria = Column(Text, nullable=True)
+    importe_neto = Column(Numeric(12, 2), nullable=False)
+    iva_pct = Column(Numeric(6, 3), nullable=False, default=21)
+    iva_credito = Column(Numeric(12, 2), nullable=False)
+    percepciones = Column(Numeric(12, 2), nullable=False, default=0)
+    importe_total = Column(Numeric(12, 2), nullable=False)
+    deducible_iva = Column(Boolean, nullable=False, default=True)
+    notas = Column(Text, nullable=True)
+    creado_por = Column(Text, nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())

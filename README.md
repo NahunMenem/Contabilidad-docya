@@ -1,8 +1,9 @@
 # DocYa Contabilidad API
 
-Servicio independiente para llevar la contabilidad de DocYa SAS (calendario de
-vencimientos como primer modulo, con espacio para sumar libro IVA, comprobantes
-y balance anual mas adelante).
+Servicio independiente para llevar la contabilidad operativa de DocYa SAS:
+calendario de vencimientos, libro manual de consultas, comprobantes emitidos,
+gastos/compras, ajustes de IVA y resumen mensual para revisar con el contador
+antes de cargar ARCA.
 
 Vive como **servicio separado** del backend principal de DocYa para no afectar
 ese sistema en producción: comparte la misma base de datos Postgres, pero todas
@@ -15,6 +16,9 @@ ninguna tabla existente):
 
 ```bash
 psql "$DATABASE_URL" -f migrations/001_init_contabilidad_schema.sql
+psql "$DATABASE_URL" -f migrations/002_libro_consultas.sql
+psql "$DATABASE_URL" -f migrations/003_ajustes_iva_mensuales.sql
+psql "$DATABASE_URL" -f migrations/004_comprobantes_gastos_resumen.sql
 ```
 
 ## 2. Variables de entorno
@@ -64,6 +68,24 @@ usa el panel de administración).
 - `GET    /contabilidad/registros-consultas?desde=&hasta=` — listar consultas del libro (filtro opcional por fecha)
 - `POST   /contabilidad/registros-consultas` — registrar una consulta facturada
 - `DELETE /contabilidad/registros-consultas/{id}` — eliminar un registro
+- `GET    /contabilidad/comprobantes-emitidos?desde=&hasta=` — listar comprobantes emitidos manuales
+- `POST   /contabilidad/comprobantes-emitidos` — cargar factura/NC/ND emitida con CAE opcional
+- `PUT    /contabilidad/comprobantes-emitidos/{id}` — editar comprobante
+- `DELETE /contabilidad/comprobantes-emitidos/{id}` — eliminar comprobante
+- `GET    /contabilidad/gastos-compras?desde=&hasta=` — listar compras/gastos con IVA credito
+- `POST   /contabilidad/gastos-compras` — cargar gasto/proveedor
+- `PUT    /contabilidad/gastos-compras/{id}` — editar gasto/proveedor
+- `DELETE /contabilidad/gastos-compras/{id}` — eliminar gasto/proveedor
 - `GET    /contabilidad/ajustes-iva/{periodo}` — ver el ajuste manual de IVA crédito de un período (`YYYY-MM`)
 - `PUT    /contabilidad/ajustes-iva/{periodo}` — guardar ese ajuste (otros créditos / notas)
+- `GET    /contabilidad/resumen-iva/{periodo}` — resumen mensual de IVA debito/credito estimado
+- `GET    /contabilidad/arca/checklist/{periodo}` — pendientes antes de revisar/cargar ARCA
+- `GET    /contabilidad/exportaciones/iva/{periodo}.csv` — CSV simple del resumen mensual
 - `GET    /health` — chequeo de salud
+
+## Importante ARCA
+
+Esta API prepara la informacion interna y los importes estimados. No reemplaza
+la presentacion en ARCA, no emite CAE por WebService y no sube automaticamente
+Libro IVA Digital / IVA Simple. La carga final debe revisarla el contador contra
+los servicios vigentes de ARCA.

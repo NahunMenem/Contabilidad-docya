@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine
+from sqlalchemy import text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from .config import DATABASE_URL
@@ -14,3 +15,10 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def init_contabilidad_schema():
+    """Crea el schema y las tablas faltantes sin tocar datos existentes."""
+    with engine.begin() as conn:
+        conn.execute(text("CREATE SCHEMA IF NOT EXISTS contabilidad"))
+    Base.metadata.create_all(bind=engine)

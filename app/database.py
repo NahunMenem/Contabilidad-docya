@@ -22,3 +22,12 @@ def init_contabilidad_schema():
     with engine.begin() as conn:
         conn.execute(text("CREATE SCHEMA IF NOT EXISTS contabilidad"))
     Base.metadata.create_all(bind=engine)
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                ALTER TABLE contabilidad.parametros_facturacion
+                ADD COLUMN IF NOT EXISTS iibb_agip_pct NUMERIC(6,3) NOT NULL DEFAULT 3
+                """
+            )
+        )

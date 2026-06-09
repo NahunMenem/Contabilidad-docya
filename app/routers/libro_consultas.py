@@ -313,6 +313,7 @@ def eliminar_gasto_compra(
 
 def _resumen_iva(periodo: str, db: Session) -> schemas.ResumenIvaMensualOut:
     desde, hasta = _periodo_rango(periodo)
+    parametros = _parametros(db)
     consultas = db.scalars(
         select(models.RegistroConsulta).where(
             models.RegistroConsulta.fecha >= desde,
@@ -340,6 +341,7 @@ def _resumen_iva(periodo: str, db: Session) -> schemas.ResumenIvaMensualOut:
     iva_debito_consultas = _money(sum((c.precio * c.comision_docya_pct / Decimal("100") * c.iva_pct / Decimal("100") for c in consultas), Decimal("0")))
     comision_mp = _money(sum((c.precio * c.comision_mp_pct / Decimal("100") for c in consultas), Decimal("0")))
     margen_docya_post_mp = _money(comision_docya - comision_mp)
+    agip_iibb = _money(comision_docya * parametros.iibb_agip_pct / Decimal("100"))
     iva_credito_mp = _money(sum((c.precio * c.comision_mp_pct / Decimal("100") * c.iva_pct / Decimal("100") for c in consultas), Decimal("0")))
     iva_debito_comprobantes = _money(sum((c.iva_debito for c in comprobantes), Decimal("0")))
     iva_credito_gastos = _money(sum((g.iva_credito for g in gastos), Decimal("0")))
@@ -366,6 +368,9 @@ def _resumen_iva(periodo: str, db: Session) -> schemas.ResumenIvaMensualOut:
         iva_debito_total=iva_debito_total,
         comision_mp_neta=comision_mp,
         iva_credito_mp=iva_credito_mp,
+        agip_base_imponible=comision_docya,
+        agip_iibb_pct=parametros.iibb_agip_pct,
+        agip_iibb_estimado=agip_iibb,
         iva_credito_gastos=iva_credito_gastos,
         otros_creditos=otros_creditos,
         percepciones=percepciones,
@@ -432,6 +437,9 @@ def exportar_iva_csv(
         ["comision_docya_neta", str(resumen.comision_docya_neta)],
         ["comision_mp_absorbida", str(resumen.comision_mp_neta)],
         ["margen_docya_post_mp", str(resumen.margen_docya_post_mp)],
+        ["agip_base_imponible", str(resumen.agip_base_imponible)],
+        ["agip_iibb_pct", str(resumen.agip_iibb_pct)],
+        ["agip_iibb_estimado", str(resumen.agip_iibb_estimado)],
         ["iva_debito_consultas", str(resumen.iva_debito_consultas)],
         ["iva_debito_comprobantes", str(resumen.iva_debito_comprobantes)],
         ["iva_debito_total", str(resumen.iva_debito_total)],

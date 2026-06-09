@@ -49,6 +49,7 @@ class ParametrosFacturacionOut(BaseModel):
     comision_docya_pct: Decimal
     comision_mp_pct: Decimal
     iva_pct: Decimal
+    iibb_agip_pct: Decimal
 
     class Config:
         from_attributes = True
@@ -58,6 +59,7 @@ class ParametrosFacturacionUpdate(BaseModel):
     comision_docya_pct: Decimal = Field(ge=0, le=100)
     comision_mp_pct: Decimal = Field(ge=0, le=100)
     iva_pct: Decimal = Field(ge=0, le=100)
+    iibb_agip_pct: Decimal = Field(ge=0, le=100)
 
 
 class RegistroConsultaCreate(BaseModel):
@@ -190,6 +192,9 @@ class ResumenIvaMensualOut(BaseModel):
     iva_debito_total: Decimal
     comision_mp_neta: Decimal
     iva_credito_mp: Decimal
+    agip_base_imponible: Decimal
+    agip_iibb_pct: Decimal
+    agip_iibb_estimado: Decimal
     iva_credito_gastos: Decimal
     otros_creditos: Decimal
     percepciones: Decimal

@@ -71,6 +71,7 @@ class ParametrosFacturacion(Base):
     comision_docya_pct = Column(Numeric(6, 3), nullable=False, default=20)
     comision_mp_pct = Column(Numeric(6, 3), nullable=False, default=6)
     iva_pct = Column(Numeric(6, 3), nullable=False, default=21)
+    iibb_agip_pct = Column(Numeric(6, 3), nullable=False, default=3)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
 

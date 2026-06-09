@@ -1,5 +1,5 @@
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 
@@ -458,4 +458,129 @@ def exportar_iva_csv(
         content=body,
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="docya-iva-{periodo}.csv"'},
+    )
+
+
+@router.get("/cierres/{periodo}", response_model=schemas.CierreMensualOut)
+def obtener_cierre_mensual(
+    periodo: str,
+    db: Session = Depends(get_db),
+    _admin: dict = Depends(get_current_admin),
+):
+    _validar_periodo(periodo)
+    cierre = db.get(models.CierreMensual, periodo)
+    if not cierre:
+        cierre = models.CierreMensual(periodo=periodo)
+        db.add(cierre)
+        db.commit()
+        db.refresh(cierre)
+    return cierre
+
+
+@router.put("/cierres/{periodo}", response_model=schemas.CierreMensualOut)
+def actualizar_cierre_mensual(
+    periodo: str,
+    data: schemas.CierreMensualUpdate,
+    db: Session = Depends(get_db),
+    admin: dict = Depends(get_current_admin),
+):
+    _validar_periodo(periodo)
+    cierre = db.get(models.CierreMensual, periodo)
+    if not cierre:
+        cierre = models.CierreMensual(periodo=periodo)
+        db.add(cierre)
+    was_closed = bool(cierre.cerrado)
+    for field, value in data.model_dump().items():
+        setattr(cierre, field, value)
+    if cierre.cerrado and not was_closed:
+        cierre.cerrado_por = _actor(admin)
+        cierre.cerrado_en = datetime.now(timezone.utc)
+    if not cierre.cerrado:
+        cierre.cerrado_por = None
+        cierre.cerrado_en = None
+    db.commit()
+    db.refresh(cierre)
+    return cierre
+
+
+@router.get("/movimientos-caja", response_model=list[schemas.MovimientoCajaOut])
+def listar_movimientos_caja(
+    desde: Optional[date] = Query(default=None),
+    hasta: Optional[date] = Query(default=None),
+    db: Session = Depends(get_db),
+    _admin: dict = Depends(get_current_admin),
+):
+    stmt = select(models.MovimientoCaja)
+    if desde:
+        stmt = stmt.where(models.MovimientoCaja.fecha >= desde)
+    if hasta:
+        stmt = stmt.where(models.MovimientoCaja.fecha <= hasta)
+    stmt = stmt.order_by(models.MovimientoCaja.fecha.desc(), models.MovimientoCaja.id.desc())
+    return db.scalars(stmt).all()
+
+
+@router.post("/movimientos-caja", response_model=schemas.MovimientoCajaOut, status_code=status.HTTP_201_CREATED)
+def crear_movimiento_caja(
+    data: schemas.MovimientoCajaCreate,
+    db: Session = Depends(get_db),
+    admin: dict = Depends(get_current_admin),
+):
+    movimiento = models.MovimientoCaja(**data.model_dump(), creado_por=_actor(admin))
+    db.add(movimiento)
+    db.commit()
+    db.refresh(movimiento)
+    return movimiento
+
+
+@router.put("/movimientos-caja/{movimiento_id}", response_model=schemas.MovimientoCajaOut)
+def actualizar_movimiento_caja(
+    movimiento_id: int,
+    data: schemas.MovimientoCajaUpdate,
+    db: Session = Depends(get_db),
+    _admin: dict = Depends(get_current_admin),
+):
+    movimiento = db.get(models.MovimientoCaja, movimiento_id)
+    if not movimiento:
+        raise HTTPException(status_code=404, detail="Movimiento no encontrado")
+    for field, value in data.model_dump().items():
+        setattr(movimiento, field, value)
+    db.commit()
+    db.refresh(movimiento)
+    return movimiento
+
+
+@router.delete("/movimientos-caja/{movimiento_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_movimiento_caja(
+    movimiento_id: int,
+    db: Session = Depends(get_db),
+    _admin: dict = Depends(get_current_admin),
+):
+    movimiento = db.get(models.MovimientoCaja, movimiento_id)
+    if not movimiento:
+        raise HTTPException(status_code=404, detail="Movimiento no encontrado")
+    db.delete(movimiento)
+    db.commit()
+
+
+@router.get("/resumen-caja/{periodo}", response_model=schemas.ResumenCajaOut)
+def obtener_resumen_caja(
+    periodo: str,
+    db: Session = Depends(get_db),
+    _admin: dict = Depends(get_current_admin),
+):
+    desde, hasta = _periodo_rango(periodo)
+    movimientos = db.scalars(
+        select(models.MovimientoCaja).where(
+            models.MovimientoCaja.fecha >= desde,
+            models.MovimientoCaja.fecha <= hasta,
+        )
+    ).all()
+    ingresos = _money(sum((m.monto for m in movimientos if m.tipo == "ingreso"), Decimal("0")))
+    egresos = _money(sum((m.monto for m in movimientos if m.tipo == "egreso"), Decimal("0")))
+    return schemas.ResumenCajaOut(
+        periodo=periodo,
+        ingresos=ingresos,
+        egresos=egresos,
+        saldo=_money(ingresos - egresos),
+        movimientos_cantidad=len(movimientos),
     )

@@ -183,3 +183,40 @@ class GastoCompra(Base):
     creado_por = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class CierreMensual(Base):
+    __tablename__ = "cierres_mensuales"
+    __table_args__ = {"schema": SCHEMA}
+
+    periodo = Column(Text, primary_key=True)  # 'YYYY-MM'
+    consultas_cargadas = Column(Boolean, nullable=False, default=False)
+    facturas_emitidas = Column(Boolean, nullable=False, default=False)
+    gastos_cargados = Column(Boolean, nullable=False, default=False)
+    medicos_liquidados = Column(Boolean, nullable=False, default=False)
+    iva_revisado = Column(Boolean, nullable=False, default=False)
+    agip_revisado = Column(Boolean, nullable=False, default=False)
+    caja_conciliada = Column(Boolean, nullable=False, default=False)
+    cerrado = Column(Boolean, nullable=False, default=False)
+    notas = Column(Text, nullable=True)
+    cerrado_por = Column(Text, nullable=True)
+    cerrado_en = Column(TIMESTAMP(timezone=True), nullable=True)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class MovimientoCaja(Base):
+    __tablename__ = "movimientos_caja"
+    __table_args__ = {"schema": SCHEMA}
+
+    id = Column(Integer, primary_key=True)
+    fecha = Column(Date, nullable=False)
+    tipo = Column(Text, nullable=False)  # ingreso | egreso
+    categoria = Column(Text, nullable=False)
+    descripcion = Column(Text, nullable=False)
+    monto = Column(Numeric(12, 2), nullable=False)
+    medio = Column(Text, nullable=True)
+    referencia = Column(Text, nullable=True)
+    notas = Column(Text, nullable=True)
+    creado_por = Column(Text, nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())

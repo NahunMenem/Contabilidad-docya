@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal, Optional
 
@@ -210,3 +210,65 @@ class ChecklistArcaOut(BaseModel):
     listo_para_revisar: bool
     pendientes: list[str]
     fuentes: list[str]
+
+
+class CierreMensualBase(BaseModel):
+    consultas_cargadas: bool = False
+    facturas_emitidas: bool = False
+    gastos_cargados: bool = False
+    medicos_liquidados: bool = False
+    iva_revisado: bool = False
+    agip_revisado: bool = False
+    caja_conciliada: bool = False
+    cerrado: bool = False
+    notas: Optional[str] = None
+
+
+class CierreMensualUpdate(CierreMensualBase):
+    pass
+
+
+class CierreMensualOut(CierreMensualBase):
+    periodo: str
+    cerrado_por: Optional[str] = None
+    cerrado_en: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+TipoMovimientoCaja = Literal["ingreso", "egreso"]
+
+
+class MovimientoCajaBase(BaseModel):
+    fecha: date
+    tipo: TipoMovimientoCaja
+    categoria: str = Field(min_length=1)
+    descripcion: str = Field(min_length=1)
+    monto: Decimal = Field(gt=0)
+    medio: Optional[str] = None
+    referencia: Optional[str] = None
+    notas: Optional[str] = None
+
+
+class MovimientoCajaCreate(MovimientoCajaBase):
+    pass
+
+
+class MovimientoCajaUpdate(MovimientoCajaBase):
+    pass
+
+
+class MovimientoCajaOut(MovimientoCajaBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class ResumenCajaOut(BaseModel):
+    periodo: str
+    ingresos: Decimal
+    egresos: Decimal
+    saldo: Decimal
+    movimientos_cantidad: int

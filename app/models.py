@@ -1,3 +1,5 @@
+from decimal import Decimal, ROUND_HALF_UP
+
 from sqlalchemy import (
     TIMESTAMP,
     Boolean,
@@ -16,6 +18,11 @@ from sqlalchemy.sql import func
 from .database import Base
 
 SCHEMA = "contabilidad"
+MONEY = Decimal("0.01")
+
+
+def money(value: Decimal) -> Decimal:
+    return value.quantize(MONEY, rounding=ROUND_HALF_UP)
 
 
 class ObligacionFiscal(Base):
@@ -81,6 +88,34 @@ class RegistroConsulta(Base):
     iva_pct = Column(Numeric(6, 3), nullable=False)
     creado_por = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    @property
+    def comision_docya_importe(self):
+        return money(self.precio * self.comision_docya_pct / Decimal("100"))
+
+    @property
+    def comision_mp_importe(self):
+        return money(self.precio * self.comision_mp_pct / Decimal("100"))
+
+    @property
+    def neto_medico_importe(self):
+        return money(self.precio * (Decimal("100") - self.comision_docya_pct) / Decimal("100"))
+
+    @property
+    def base_despues_mp(self):
+        return money(self.precio - self.comision_mp_importe)
+
+    @property
+    def margen_docya_post_mp(self):
+        return money(self.comision_docya_importe - self.comision_mp_importe)
+
+    @property
+    def iva_debito_docya(self):
+        return money(self.comision_docya_importe * self.iva_pct / Decimal("100"))
+
+    @property
+    def iva_credito_mp(self):
+        return money(self.comision_mp_importe * self.iva_pct / Decimal("100"))
 
 
 class AjusteIvaMensual(Base):

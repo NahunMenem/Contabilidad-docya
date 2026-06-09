@@ -76,6 +76,13 @@ class RegistroConsultaOut(BaseModel):
     comision_docya_pct: Decimal
     comision_mp_pct: Decimal
     iva_pct: Decimal
+    comision_docya_importe: Decimal
+    comision_mp_importe: Decimal
+    neto_medico_importe: Decimal
+    base_despues_mp: Decimal
+    margen_docya_post_mp: Decimal
+    iva_debito_docya: Decimal
+    iva_credito_mp: Decimal
 
     class Config:
         from_attributes = True
@@ -175,7 +182,9 @@ class ResumenIvaMensualOut(BaseModel):
     comprobantes_cantidad: int
     gastos_cantidad: int
     total_consultas_paciente: Decimal
+    neto_medicos_total: Decimal
     comision_docya_neta: Decimal
+    margen_docya_post_mp: Decimal
     iva_debito_consultas: Decimal
     iva_debito_comprobantes: Decimal
     iva_debito_total: Decimal

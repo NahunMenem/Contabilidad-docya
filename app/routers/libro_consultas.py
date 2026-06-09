@@ -336,8 +336,10 @@ def _resumen_iva(periodo: str, db: Session) -> schemas.ResumenIvaMensualOut:
 
     total_consultas = _money(sum((c.precio for c in consultas), Decimal("0")))
     comision_docya = _money(sum((c.precio * c.comision_docya_pct / Decimal("100") for c in consultas), Decimal("0")))
+    neto_medicos = _money(sum((c.precio * (Decimal("100") - c.comision_docya_pct) / Decimal("100") for c in consultas), Decimal("0")))
     iva_debito_consultas = _money(sum((c.precio * c.comision_docya_pct / Decimal("100") * c.iva_pct / Decimal("100") for c in consultas), Decimal("0")))
     comision_mp = _money(sum((c.precio * c.comision_mp_pct / Decimal("100") for c in consultas), Decimal("0")))
+    margen_docya_post_mp = _money(comision_docya - comision_mp)
     iva_credito_mp = _money(sum((c.precio * c.comision_mp_pct / Decimal("100") * c.iva_pct / Decimal("100") for c in consultas), Decimal("0")))
     iva_debito_comprobantes = _money(sum((c.iva_debito for c in comprobantes), Decimal("0")))
     iva_credito_gastos = _money(sum((g.iva_credito for g in gastos), Decimal("0")))
@@ -356,7 +358,9 @@ def _resumen_iva(periodo: str, db: Session) -> schemas.ResumenIvaMensualOut:
         comprobantes_cantidad=len(comprobantes),
         gastos_cantidad=len(gastos),
         total_consultas_paciente=total_consultas,
+        neto_medicos_total=neto_medicos,
         comision_docya_neta=comision_docya,
+        margen_docya_post_mp=margen_docya_post_mp,
         iva_debito_consultas=iva_debito_consultas,
         iva_debito_comprobantes=iva_debito_comprobantes,
         iva_debito_total=iva_debito_total,
@@ -424,7 +428,10 @@ def exportar_iva_csv(
         ["comprobantes_cantidad", str(resumen.comprobantes_cantidad)],
         ["gastos_cantidad", str(resumen.gastos_cantidad)],
         ["total_consultas_paciente", str(resumen.total_consultas_paciente)],
+        ["neto_medicos_total", str(resumen.neto_medicos_total)],
         ["comision_docya_neta", str(resumen.comision_docya_neta)],
+        ["comision_mp_absorbida", str(resumen.comision_mp_neta)],
+        ["margen_docya_post_mp", str(resumen.margen_docya_post_mp)],
         ["iva_debito_consultas", str(resumen.iva_debito_consultas)],
         ["iva_debito_comprobantes", str(resumen.iva_debito_comprobantes)],
         ["iva_debito_total", str(resumen.iva_debito_total)],
